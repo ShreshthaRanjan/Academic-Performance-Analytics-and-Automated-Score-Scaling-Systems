@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Marks Analytics Dashboard</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #0b1120;
+        }
+    </style>
+</head>
+<body class="text-gray-200 min-h-screen">
+    <!-- Header -->
+    <div class="p-6">
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+            📊 Marks Analytics Dashboard
+        </h1>
+    </div>
+    <!-- Upload Card -->
+    <div class="max-w-4xl mx-auto bg-slate-800 shadow-xl rounded-2xl p-8 mb-10">
+        <h2 class="text-2xl font-semibold mb-4">Upload Marks Excel File</h2>
+        <form id="uploadForm" class="flex flex-col md:flex-row gap-4 items-center">
+            <input type="file" id="fileInput"
+                class="bg-slate-700 p-3 rounded-lg w-full text-gray-300">
+            <button type="submit"
+                class="bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-3 rounded-lg font-semibold hover:scale-105 transition duration-300">
+                Analyze
+            </button>
+        </form>
+        <p id="statusMessage" class="mt-4 text-green-400"></p>
+    </div>
+    <!-- Stats Section -->
+    <div id="statsSection" class="hidden max-w-6xl mx-auto grid md:grid-cols-2 gap-6 mb-10">
+        <!-- Scored Stats -->
+        <div class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold mb-4 text-blue-400">Scored Marks Statistics</h3>
+            <div id="scoredStats"></div>
+        </div>
+        <!-- Scaled Stats -->
+        <div class="bg-slate-800 rounded-2xl p-6 shadow-lg">
+            <h3 class="text-xl font-bold mb-4 text-cyan-400">Scaled Marks Statistics</h3>
+            <div id="scaledStats"></div>
+        </div>
+    </div>
+    <!-- Chart Section -->
+    <div id="chartSection" class="hidden max-w-4xl mx-auto bg-slate-800 rounded-2xl p-6 shadow-lg mb-10">
+        <h3 class="text-xl font-bold mb-4 text-purple-400">Grade Distribution</h3>
+        <canvas id="gradeChart"></canvas>
+    </div>
+    <!-- Download Buttons -->
+    <div id="downloadSection" class="hidden max-w-4xl mx-auto flex gap-4 justify-center mb-10">
+        <a href="/download"
+           class="bg-green-500 px-6 py-3 rounded-lg font-semibold hover:scale-105 transition">
+           Download Processed Excel
+        </a>
+        <button onclick="downloadChart()"
+           class="bg-purple-500 px-6 py-3 rounded-lg font-semibold hover:scale-105 transition">
+           Download Chart PNG
+        </button>
+    </div>
+    <script>
+    let chartInstance = null;
+    document.getElementById("uploadForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+        if (!file) {
+            alert("Please select a file.");
+            return;
+        }
+        const formData = new FormData();
+        formData.append("file", file);
+        fetch("/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            document.getElementById("statusMessage").innerText = "File analyzed successfully!";
+            displayStats("scoredStats", data.scored_stats);
+            displayStats("scaledStats", data.scaled_stats);
+            createChart(data.grade_distribution);
+            document.getElementById("statsSection").classList.remove("hidden");
+            document.getElementById("chartSection").classList.remove("hidden");
+            document.getElementById("downloadSection").classList.remove("hidden");
+        });
+    });
+    function displayStats(elementId, stats) {
+        const container = document.getElementById(elementId);
+        container.innerHTML = `
+        <p>Max: ${stats.max}</p>
+        <p>Min: ${stats.min}</p>
+        <p>Mean: ${stats.mean}</p>
+        <p>Standard Deviation: ${stats.std}</p>
+        <p>Minimum Passing Marks: ${stats.min_passing ?? "N/A"}</p>
+    `;
+}
+function createChart(gradeData) {
+    const ctx = document.getElementById('gradeChart').getContext('2d');
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(gradeData),
+            datasets: [{
+                label: 'Number of Students',
+                data: Object.values(gradeData),
+                backgroundColor: 'rgba(59, 130, 246, 0.6)'
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "white"
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "white" }
+                },
+                y: {
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
+}
+function downloadChart() {
+    const link = document.createElement('a');
+    link.href = document.getElementById('gradeChart').toDataURL();
+    link.download = "grade_distribution.png";
+    link.click();
+}
+</script>
+</body>
+</html>
