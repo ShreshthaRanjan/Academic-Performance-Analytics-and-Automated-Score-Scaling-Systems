@@ -1,10 +1,13 @@
 **ACADEMIC PERFORMANCE ANALYTICS AND AUTOMATED SCORE SCALING SYSTEMS**
 
 INTRODUCTION
+
 A full-stack web application that automates academic marks processing, statistical analysis, and dynamic score normalization. The system reads Excel-based student datasets, computes performance metrics, visualizes grade distribution, and generates structured downloadable reports with embedded charts.
 
 FEATURES
+
 Upload Excel file containing student marks
+
 Automatic calculation of:
 -maximum marks
 -minimum marks
