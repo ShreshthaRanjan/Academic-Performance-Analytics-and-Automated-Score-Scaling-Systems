@@ -62,13 +62,21 @@ Chart.js
 PROJECT STRUCTURE
 
 marks_dashboard/
+
 │
+
 ├── app.py
+
 ├── templates/
+
 │   └── index.html
+
 ├── static/
+
 │   └── uploads/
+
 └── processed/
+
 
 
 INSTALLATION AND SETUP
